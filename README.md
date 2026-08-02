@@ -23,7 +23,38 @@
 
 ## 快速开始
 
-### 1. 启动 MySQL（Docker）
+### 方式一：一键安装（推荐，v1.0.0 起）
+
+要求：已安装 **Node.js 18+** 与 **Docker**（Windows 需 Docker Desktop 运行中）。
+
+```bash
+# Linux / macOS
+bash scripts/install.sh
+
+# Windows
+scripts\install.cmd
+```
+
+脚本自动完成：环境检查 → 启动 MySQL（`docker compose`，**数据卷持久化**）→ 生成 `.env`（随机 `AUTH_SECRET`）→ `npm ci` → 建表（`prisma migrate deploy`）→ 补建搜索索引 → 种子数据 → 生产构建。已检测到旧版 `pafish-mysql` 容器时会跳过容器创建（不重建，防数据丢失），详见「升级已有容器到持久化」。
+
+安装完成后：
+
+```bash
+npm run dev        # 开发预览（next dev --webpack，Windows 必需）
+npm start          # 生产运行（需先 npm run build）
+```
+
+访问 http://localhost:3000 ，后台 http://localhost:3000/admin
+
+### 方式二：手动部署
+
+**1. 启动 MySQL（Docker）**——仓库已提供 `docker-compose.yml`（推荐，含数据卷持久化）：
+
+```bash
+docker compose up -d
+```
+
+等价的手动 `docker run`（无数据卷，容器删除即丢数据，不建议生产使用）：
 
 ```bash
 docker run -d --name pafish-mysql \
@@ -36,33 +67,31 @@ docker run -d --name pafish-mysql \
   mysql:8.0 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
 ```
 
-### 2. 配置环境变量
-
-复制 `.env.example` 为 `.env`（或直接使用现有 `.env`）：
+**2. 配置环境变量**：复制 `.env.example` 为 `.env`（`node scripts/ensure-env.mjs` 可自动生成并随机化 `AUTH_SECRET`）：
 
 ```
 DATABASE_URL="mysql://pafish:pafish_pass@127.0.0.1:3307/pafish"
-AUTH_SECRET="pafish-secret-2026-change-me"   # 生产环境务必更换
+AUTH_SECRET="pafish-secret-2026-change-me"   # 生产环境务必更换（随机 64 位 hex）
 SITE_URL="http://localhost:3000"                     # 生产环境改为正式域名（sitemap/RSS/OG 用）
 ```
 
-### 3. 安装依赖与初始化数据库
+**3. 安装依赖与初始化数据库**：
 
 ```bash
-npm install
-npx prisma migrate dev     # 建表（之后需手动重建 FULLTEXT 索引，见"运维注意"）
-npx prisma db seed         # 种子数据（管理员/示例文章/默认设置）
+npm ci
+npx prisma migrate deploy     # 建表（生产姿势；migrate dev 仅用于开发，见"运维注意"）
+npx tsx scripts/fix-ft-index.ts   # 幂等补建 FULLTEXT 搜索索引
+npx prisma db seed            # 种子数据（管理员/示例文章/默认设置）
 ```
 
 > 若迁移需要 shadow database 权限，可用 root 连接串执行：`DATABASE_URL="mysql://root:pafish_root_2026@127.0.0.1:3307/pafish" npx prisma migrate dev`
 
-### 4. 启动
+**4. 构建并启动**：
 
 ```bash
-npm run dev        # next dev --webpack（Windows 必需，Turbopack 有 junction bug）
+npm run build
+npm start          # 生产模式；常驻部署见下方「PM2 常驻」
 ```
-
-访问 http://localhost:3000 ，后台 http://localhost:3000/admin
 
 **默认账号**（请尽快修改）：
 
@@ -107,6 +136,26 @@ src/
 - 若上传大文件超限：站点设置中调高"上传大小限制"后，还需同步调大反向代理请求体上限（如 nginx `client_max_body_size 50m;`）
 - 定时发布依赖常驻进程（instrumentation 中的 cron）；若无常驻进程，前台查询层兜底（`publishedAt <= NOW()`）仍不会提前暴露文章
 - `.env` 中的 `AUTH_SECRET` 必须更换为强随机值
+
+### 升级已有容器到持久化
+
+v1.0.0 之前的 MySQL 容器用 `docker run` 创建，**没有挂载数据卷**——容器被删除（`docker rm`）即全部数据丢失。升级到数据卷持久化的步骤（务必先备份）：
+
+```bash
+# 1. 备份当前数据（导出 SQL）
+docker exec pafish-mysql sh -c 'mysqldump -uroot -ppafish_root_2026 --databases pafish' > pafish-backup.sql
+
+# 2. 停止并删除旧容器（数据已在备份中）
+docker stop pafish-mysql && docker rm pafish-mysql
+
+# 3. 用 docker-compose 重建（自动挂载 pafish-mysql-data 命名卷）
+docker compose up -d
+
+# 4. 等 MySQL 就绪后恢复数据
+docker exec -i pafish-mysql sh -c 'mysql -uroot -ppafish_root_2026' < pafish-backup.sql
+```
+
+> `docker compose down` 不会删除命名卷（除非加 `-v`），日常重启容器数据安全。已启用云存储插件（如缤纷云）的站点，媒体本体在云端，`public/uploads/` 仅剩本地回退文件，备份时一并拷贝即可。
 
 ### PM2 常驻（Linux 服务器）
 

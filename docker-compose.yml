@@ -1,0 +1,35 @@
+# pafish 博客 CMS —— MySQL 服务编排（一键安装脚本使用）
+#
+# 用法：docker compose up -d
+# 数据持久化：pafish-mysql-data 命名卷，删除/重建容器不会丢数据（旧版 docker run 无卷挂载）
+#
+# 注意：已有同名容器 pafish-mysql（旧 docker run 创建、无卷）时，compose 不会自动附加卷，
+# 请勿直接 docker compose up 重建，先按 README「升级已有容器到持久化」小节迁移数据。
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: pafish-mysql
+    restart: unless-stopped
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: pafish_root_2026
+      MYSQL_DATABASE: pafish
+      MYSQL_USER: pafish
+      MYSQL_PASSWORD: pafish_pass
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - pafish-mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-ppafish_root_2026"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      start_period: 20s
+
+volumes:
+  pafish-mysql-data:
