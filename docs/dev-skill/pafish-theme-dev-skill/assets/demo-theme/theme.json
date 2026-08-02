@@ -1,0 +1,85 @@
+{
+  "name": "demo-theme",
+  "title": "演示·开发示例",
+  "version": "1.0.0",
+  "description": "开发文档配套示例主题：8 类设置字段 + 分组 Tab + show_if 联动演示。复制本目录到 themes/demo-theme/ 即可在后台启用验证。",
+  "author": "pafish",
+  "settings": [
+    {
+      "key": "footer_text",
+      "label": "页脚文案",
+      "type": "text",
+      "group": "内容",
+      "default": "",
+      "placeholder": "留空使用默认"
+    },
+    {
+      "key": "show_custom_fields",
+      "label": "文章页显示自定义字段",
+      "type": "checkbox",
+      "group": "内容",
+      "default": "1"
+    },
+    {
+      "key": "logo_image",
+      "label": "站点 Logo 图片",
+      "type": "image",
+      "group": "内容"
+    },
+    {
+      "key": "show_badge",
+      "label": "显示侧边栏徽章",
+      "type": "switcher",
+      "group": "内容",
+      "default": "1"
+    },
+    {
+      "key": "badge_text",
+      "label": "徽章文字",
+      "type": "text",
+      "group": "内容",
+      "default": "演示主题",
+      "show_if": {
+        "key": "show_badge",
+        "value": "1"
+      }
+    },
+    {
+      "key": "layout_style",
+      "label": "版式",
+      "type": "radio",
+      "group": "布局",
+      "default": "wide",
+      "options": {
+        "wide": "宽版",
+        "narrow": "窄版"
+      }
+    },
+    {
+      "key": "content_width",
+      "label": "内容区宽度",
+      "type": "select",
+      "group": "布局",
+      "default": "normal",
+      "options": {
+        "narrow": "窄",
+        "normal": "标准",
+        "wide": "宽"
+      }
+    },
+    {
+      "key": "accent_color",
+      "label": "强调色",
+      "type": "color",
+      "group": "布局",
+      "default": "#3e8e7e"
+    },
+    {
+      "key": "sidebar_enabled",
+      "label": "显示桌面侧边栏",
+      "type": "switcher",
+      "group": "布局",
+      "default": "1"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+[
+  {
+    "name": "paper",
+    "title": "纸感简约",
+    "version": "1.0.0",
+    "description": "暖白纸感配色主题：纸张般的暖白底色、陶土色强调与细边框，适合长时间阅读。",
+    "author": "pafish",
+    "zip": "/store/paper.zip"
+  },
+  {
+    "name": "demo-nord",
+    "title": "演示·Nord 极夜",
+    "version": "1.0.1",
+    "description": "Nord 色板主题：北极夜（深）与雪原（浅）双色系。含 color/switcher/radio/image 字段、分组 Tab 与 show_if 依赖演示。",
+    "author": "pafish",
+    "zip": "/store/demo-nord.zip"
+  }
+]

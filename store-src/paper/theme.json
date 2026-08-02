@@ -1,0 +1,16 @@
+{
+  "name": "paper",
+  "title": "纸感简约",
+  "version": "1.0.0",
+  "description": "暖白纸感配色主题：纸张般的暖白底色、陶土色强调与细边框，适合长时间阅读。",
+  "author": "pafish",
+  "settings": [
+    {
+      "key": "footer_text",
+      "label": "页脚文案",
+      "type": "text",
+      "default": "",
+      "placeholder": "留空使用默认"
+    }
+  ]
+}

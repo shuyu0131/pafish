@@ -1,0 +1,38 @@
+/* demo-nord：Nord 色板（snow storm 浅 / polar night 深）
+   覆盖 globals.css 的语义 CSS 变量，前台外观整体切换 */
+:root {
+  --bg: #eceff4;
+  --fg: #4c566a;
+  --muted: #7a8498;
+  --card: #e5e9f0;
+  --border: #d8dee9;
+  --accent: #5e81ac;
+  --accent-soft: rgba(94, 129, 172, 0.12);
+  --danger: #bf616a;
+  --title: #3b4252;
+  --meta: #9aa4b8;
+  --side: #434c5e;
+}
+
+.dark {
+  --bg: #2e3440;
+  --fg: #d8dee9;
+  --muted: #8a93a8;
+  --card: #3b4252;
+  --border: #434c5e;
+  --accent: #88c0d0;
+  --accent-soft: rgba(136, 192, 208, 0.14);
+  --danger: #bf616a;
+  --title: #eceff4;
+  --meta: #68728a;
+  --side: #d8dee9;
+}
+
+/* 页面模板：wide（宽版页）——前台渲染容器带 data-page-template="wide" 与 .page-template-wide，
+   这里用属性选择器把内容区放宽（默认 max-w-3xl = 48rem） */
+[data-page-template="wide"] {
+  max-width: 1100px;
+}
+[data-page-template="wide"] header {
+  border-bottom-width: 2px;
+}

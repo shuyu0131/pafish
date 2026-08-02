@@ -1,26 +1,605 @@
 @import "tailwindcss";
 
+/* ============ 设计令牌：Anatole 风格（白 / 极简 / 蓝链接） ============ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #ffffff;
+  --fg: #464646;
+  --muted: #8f8f8f;
+  --card: #ffffff;
+  --border: #f2f2f2;
+  --accent: #4786d6;
+  --accent-soft: rgba(71, 134, 214, 0.08);
+  --danger: #b4543f;
+  --title: #5f5f5f;
+  --meta: #bbbbbb;
+  --side: #565654;
+}
+
+.dark {
+  --bg: #161616;
+  --fg: #d6d6d6;
+  --muted: #8a8a8a;
+  --card: #1c1c1c;
+  --border: #333333;
+  --accent: #6fa3e8;
+  --accent-soft: rgba(111, 163, 232, 0.12);
+  --danger: #d47a63;
+  --title: #c9c9c9;
+  --meta: #7d7d7d;
+  --side: #a8a8a8;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-muted: var(--muted);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-danger: var(--danger);
+  --color-title: var(--title);
+  --color-meta: var(--meta);
+  --color-side: var(--side);
+  --font-sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+    "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", "Consolas", "Courier New", monospace;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* 文本选中：主题蓝底白字 */
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* 键盘焦点环（仅键盘 Tab 时显示，鼠标点击不打扰）；
+   .input 自带 box-shadow 焦点环，避免双重描边 */
+:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+}
+.input:focus-visible {
+  outline: none;
+}
+
+/* Anatole 风格标题：全大写 + 字距 */
+.editorial {
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+
+/* 入场动画：文章列表淡入，级联延迟 */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.post-card {
+  animation: rise-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+.post-card:nth-child(2) {
+  animation-delay: 70ms;
+}
+.post-card:nth-child(3) {
+  animation-delay: 140ms;
+}
+.post-card:nth-child(4) {
+  animation-delay: 210ms;
+}
+.post-card:nth-child(5) {
+  animation-delay: 280ms;
+}
+.post-card:nth-child(n + 6) {
+  animation-delay: 350ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .post-card {
+    animation: none;
+  }
+  body {
+    transition: none;
+  }
+}
+
+/* ============ Markdown 文章内容样式 ============ */
+.md-content {
+  font-size: 1.0625rem;
+  line-height: 1.85;
+  color: var(--fg);
+  word-break: break-word;
+}
+.md-content h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 2.5rem 0 1.25rem;
+  line-height: 1.4;
+}
+.md-content h2 {
+  font-size: 1.375rem;
+  font-weight: 700;
+  margin: 2.25rem 0 1rem;
+  line-height: 1.45;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.md-content h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 1.75rem 0 0.75rem;
+}
+.md-content h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 1.5rem 0 0.5rem;
+}
+.md-content h5 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin: 1.25rem 0 0.5rem;
+}
+.md-content h6 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 1rem 0 0.5rem;
+  color: var(--muted);
+}
+.md-content del {
+  color: var(--muted);
+}
+.md-content mark {
+  background: color-mix(in srgb, var(--accent) 25%, transparent);
+  color: inherit;
+  padding: 0.05em 0.3em;
+  border-radius: 0.25rem;
+}
+.md-content kbd {
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  background: var(--accent-soft);
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 0.375rem;
+  padding: 0.1em 0.45em;
+}
+/* GFM 任务列表 */
+.md-content li > input[type="checkbox"] {
+  margin: 0 0.5rem 0 -1.3rem;
+  vertical-align: -0.1em;
+  accent-color: var(--accent);
+}
+.md-content p {
+  margin: 0.9rem 0;
+}
+.md-content a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.md-content a:hover {
+  text-decoration-color: var(--accent);
+}
+.md-content strong {
+  font-weight: 600;
+}
+.md-content blockquote {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  padding: 0.75rem 1.25rem;
+  margin: 1.25rem 0;
+  border-radius: 0 0.5rem 0.5rem 0;
+  color: var(--muted);
+}
+.md-content blockquote p {
+  margin: 0.25rem 0;
+}
+.md-content ul,
+.md-content ol {
+  margin: 0.9rem 0;
+  padding-left: 1.6rem;
+}
+.md-content ul {
+  list-style: disc;
+}
+.md-content ol {
+  list-style: decimal;
+}
+.md-content li {
+  margin: 0.35rem 0;
+}
+.md-content li::marker {
+  color: var(--accent);
+}
+.md-content code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: var(--accent-soft);
+  color: var(--fg);
+  padding: 0.15em 0.4em;
+  border-radius: 0.375rem;
+}
+.md-content pre {
+  background: #161616;
+  color: #e6e6e6;
+  border-radius: 0.75rem;
+  padding: 1.1rem 1.25rem;
+  overflow-x: auto;
+  margin: 1.25rem 0;
+  line-height: 1.65;
+  border: 1px solid #262626;
+}
+.md-content pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font-size: 0.875rem;
+  border-radius: 0;
+}
+.md-content img {
+  max-width: 100%;
+  border-radius: 0.75rem;
+  margin: 1.25rem auto;
+  display: block;
+}
+.md-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2rem 0;
+}
+.md-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+  font-size: 0.9375rem;
+}
+/* 宽表格容器：窄屏横向滚动不撑破版面 */
+.md-table-wrap {
+  overflow-x: auto;
+  margin: 1.25rem 0;
+}
+.md-table-wrap table {
+  margin: 0;
+}
+.md-content th,
+.md-content td {
+  border: 1px solid var(--border);
+  padding: 0.55rem 0.85rem;
+  text-align: left;
+}
+.md-content th {
+  background: var(--accent-soft);
+  font-weight: 600;
+}
+/* 文章图片：悬停微放大提示可点击查看大图 */
+.md-content img {
+  cursor: zoom-in;
+}
+
+/* 代码高亮主题（github 暗色近似） */
+.hljs-comment,
+.hljs-quote {
+  color: #8b949e;
+  font-style: italic;
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-subst {
+  color: #ff7b72;
+}
+.hljs-string,
+.hljs-attr,
+.hljs-template-tag {
+  color: #a5d6ff;
+}
+.hljs-title,
+.hljs-title.function_,
+.hljs-section {
+  color: #d2a8ff;
+}
+.hljs-number,
+.hljs-literal,
+.hljs-symbol,
+.hljs-bullet {
+  color: #79c0ff;
+}
+.hljs-name,
+.hljs-type,
+.hljs-class .hljs-title {
+  color: #ffa657;
+}
+.hljs-variable,
+.hljs-params {
+  color: #ffa657;
+}
+.hljs-built_in {
+  color: #ffa657;
+}
+.hljs-meta {
+  color: #79c0ff;
+}
+.hljs-emphasis {
+  font-style: italic;
+}
+.hljs-strong {
+  font-weight: 700;
+}
+
+/* ============ 基础组件类 ============ */
+@layer components {
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 999em;
+  font-size: 0.875rem;
+  font-weight: 400;
+  padding: 0.5rem 1.25rem;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: transparent;
+  color: rgba(0, 0, 0, 0.44);
+  white-space: nowrap;
+}
+.dark .btn {
+  border-color: rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.6);
+}
+.btn:hover {
+  border-color: #464545;
+  color: #464545;
+}
+.dark .btn:hover {
+  border-color: #bdbdbd;
+  color: #e0e0e0;
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: #424242;
+  color: #fff;
+  border-color: #424242;
+}
+.btn-primary:hover {
+  background: #5a5a5a;
+  border-color: #5a5a5a;
+  color: #fff;
+}
+.btn-primary:active {
+  transform: scale(0.98);
+}
+.dark .btn-primary {
+  background: #d6d6d6;
+  color: #161616;
+  border-color: #d6d6d6;
+}
+.dark .btn-primary:hover {
+  background: #fff;
+  border-color: #fff;
+  color: #161616;
+}
+.btn-outline {
+  border-color: rgba(0, 0, 0, 0.15);
+  background: transparent;
+  color: rgba(0, 0, 0, 0.44);
+}
+.btn-ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+}
+.btn-ghost:hover {
+  border-color: transparent;
+  color: var(--fg);
+  background: transparent;
+}
+.btn-danger {
+  background: transparent;
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 35%, transparent);
+}
+.btn-danger:hover {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
+}
+}
+
+@layer components {
+.input {
+  width: 100%;
+  border-radius: 0.625rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--fg);
+  padding: 0.55rem 0.85rem;
+  font-size: 0.9375rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.input::placeholder {
+  color: var(--muted);
+}
+.input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+/* 错误态：表单校验失败时红边红环（配合 aria-invalid） */
+.input[aria-invalid="true"] {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 15%, transparent);
+}
+
+/* 下拉框：去掉系统箭头，换为主题色箭头（mask + currentColor，明暗自适应） */
+select.input {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: right 0.85rem center;
+  mask-position: right 0.85rem center;
+  -webkit-mask-size: 0.95em;
+  mask-size: 0.95em;
+  padding-right: 2.4rem;
+  cursor: pointer;
+}
+
+/* 复选框/单选框：主题色 + 键盘焦点环 */
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 0.875rem;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.badge-accent {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  background: var(--accent-soft);
+}
+.badge-danger {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 35%, transparent);
+}
+/* 状态徽章：成功（已发布/已通过）绿 */
+.badge-success {
+  color: #2f9e63;
+  border-color: color-mix(in srgb, #2f9e63 35%, transparent);
+  background: color-mix(in srgb, #2f9e63 10%, transparent);
+}
+.dark .badge-success {
+  color: #4cc38a;
+  border-color: color-mix(in srgb, #4cc38a 35%, transparent);
+  background: color-mix(in srgb, #4cc38a 12%, transparent);
+}
+/* 状态徽章：警告（定时/待审）橙 */
+.badge-warning {
+  color: #d9822b;
+  border-color: color-mix(in srgb, #d9822b 35%, transparent);
+  background: color-mix(in srgb, #d9822b 10%, transparent);
+}
+.dark .badge-warning {
+  color: #e8a052;
+  border-color: color-mix(in srgb, #e8a052 35%, transparent);
+  background: color-mix(in srgb, #e8a052 12%, transparent);
+}
+}
+
+/* 文章列表：Anatole 风格，分隔线取代卡片 */
+.post-card {
+  border-bottom: 1px solid var(--border);
+}
+.post-card:last-child {
+  border-bottom: none;
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--muted) 30%, transparent);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--muted) 50%, transparent);
+}
+
+/* Firefox 滚动条（WebKit 浏览器走上面的 ::-webkit-scrollbar） */
+@supports (scrollbar-color: auto) {
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--muted) 40%, transparent) transparent;
+  }
+}
+
+/* ============ Markdown 编辑器主题适配（@uiw/react-md-editor） ============
+   包内 markdown-editor.css 运行时注入晚于 globals.css，同特异性规则会被其覆盖，
+   故全部使用双类（.w-md-editor.w-md-editor）提高特异性；
+   变量名以包内实际引用为准（--md-editor-background-color / --md-editor-box-shadow-color）。 */
+.w-md-editor.w-md-editor {
+  --md-editor-background-color: var(--bg);
+  --md-editor-box-shadow-color: var(--border);
+  --md-editor-font-family: var(--font-sans);
+  color: var(--fg);
+  background-color: var(--bg);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.w-md-editor.w-md-editor .w-md-editor-toolbar {
+  border-bottom: 1px solid var(--border);
+  background-color: var(--bg);
+  border-radius: 12px 12px 0 0;
+}
+.w-md-editor.w-md-editor .w-md-editor-toolbar li > button {
+  color: var(--muted);
+}
+.w-md-editor.w-md-editor .w-md-editor-toolbar li > button:hover,
+.w-md-editor.w-md-editor .w-md-editor-toolbar li > button:focus {
+  color: var(--fg);
+  background-color: var(--accent-soft);
+}
+.w-md-editor.w-md-editor .w-md-editor-toolbar li.active > button,
+.w-md-editor.w-md-editor .w-md-editor-toolbar li > button:active {
+  color: var(--accent);
+  background-color: var(--accent-soft);
+}
+.w-md-editor.w-md-editor .w-md-editor-text,
+.w-md-editor.w-md-editor .w-md-editor-preview {
+  background-color: var(--bg);
+  color: var(--fg);
+}
+.w-md-editor.w-md-editor .w-md-editor-text-input {
+  color: var(--fg);
+}
+.w-md-editor.w-md-editor .w-md-editor-text-pre > code {
+  background: none;
 }

@@ -1,0 +1,29 @@
+/* paper：纸感简约（暖白纸感）
+   覆盖 globals.css 的语义 CSS 变量，前台外观整体切换 */
+:root {
+  --bg: #f7f2e9;
+  --fg: #5b5346;
+  --muted: #94897a;
+  --card: #fffdf7;
+  --border: #e9dfcc;
+  --accent: #b08968;
+  --accent-soft: rgba(176, 137, 104, 0.12);
+  --danger: #c05a4d;
+  --title: #3e3628;
+  --meta: #b3a794;
+  --side: #6b6353;
+}
+
+.dark {
+  --bg: #2b2722;
+  --fg: #d8d0c2;
+  --muted: #94897a;
+  --card: #36302a;
+  --border: #4a4238;
+  --accent: #c9a17e;
+  --accent-soft: rgba(201, 161, 126, 0.14);
+  --danger: #d0766a;
+  --title: #f0e9dc;
+  --meta: #7d7366;
+  --side: #d8d0c2;
+}

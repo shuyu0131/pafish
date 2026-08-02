@@ -1,0 +1,33 @@
+{
+  "name": "demo-plugin",
+  "title": "演示·开发示例",
+  "version": "1.0.0",
+  "description": "开发文档配套示例：事件钩子日志 + 设置驱动的页脚注入。复制本目录到 plugins/demo-plugin/ 即可在后台启用验证。",
+  "author": "pafish",
+  "settings": [
+    {
+      "key": "greeting",
+      "label": "页脚问候语",
+      "type": "text",
+      "default": "来自 demo-plugin 的问候",
+      "placeholder": "显示在前台页脚"
+    },
+    {
+      "key": "show_footer",
+      "label": "显示页脚注入",
+      "type": "checkbox",
+      "default": "1"
+    },
+    {
+      "key": "footer_style",
+      "label": "注入样式",
+      "type": "select",
+      "default": "plain",
+      "options": {
+        "plain": "纯文本",
+        "card": "卡片样式"
+      }
+    }
+  ],
+  "injects": ["footer"]
+}

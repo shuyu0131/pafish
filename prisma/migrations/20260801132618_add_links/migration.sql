@@ -1,0 +1,12 @@
+-- CreateTable
+CREATE TABLE `links` (
+    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(100) NOT NULL,
+    `url` VARCHAR(500) NOT NULL,
+    `description` VARCHAR(255) NULL,
+    `sort_order` INTEGER NOT NULL DEFAULT 0,
+    `visible` BOOLEAN NOT NULL DEFAULT true,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

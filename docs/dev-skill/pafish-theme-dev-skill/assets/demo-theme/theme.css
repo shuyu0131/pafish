@@ -1,0 +1,31 @@
+/* demo-theme：青瓷风格（浅青白 / 墨绿强调）
+   覆盖 globals.css 的语义 CSS 变量，前台外观整体切换：
+   - 前台布局以 <style data-theme="demo-theme"> 注入（仅前台，后台保持默认配色）
+   - 需同时提供 :root（浅色）与 .dark（深色）两套变量 */
+:root {
+  --bg: #eef4f0;
+  --fg: #44524c;
+  --muted: #82928a;
+  --card: #f6faf7;
+  --border: #dde9e1;
+  --accent: #3e8e7e;
+  --accent-soft: rgba(62, 142, 126, 0.12);
+  --danger: #b0543f;
+  --title: #33423c;
+  --meta: #9db0a6;
+  --side: #5c6b64;
+}
+
+.dark {
+  --bg: #1f2825;
+  --fg: #d5e0da;
+  --muted: #8ba097;
+  --card: #27312e;
+  --border: #38463f;
+  --accent: #6fc0ae;
+  --accent-soft: rgba(111, 192, 174, 0.14);
+  --danger: #d47a63;
+  --title: #e8f0ec;
+  --meta: #6f8379;
+  --side: #d5e0da;
+}

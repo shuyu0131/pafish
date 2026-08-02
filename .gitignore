@@ -39,3 +39,16 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
+
+# 商店发布临时目录
+/.store-publish/
+
+# 运行时数据：上传媒体与备份不入库（生产服务器各自持有）
+/public/uploads/
+/backups/
+
+# 会话临时文件
+/.tmp-*.png
+/.tmp-*.shot
