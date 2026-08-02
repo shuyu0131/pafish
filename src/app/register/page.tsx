@@ -7,6 +7,8 @@ export default async function RegisterPage() {
   const settings = await getSettings();
   const siteName = settings.site_name || "纸鱼博客";
   const open = settings.allow_registration !== "false";
+  // 注册邮箱验证码（后台可关；依赖 SMTP 配置）
+  const requireVerify = settings.require_email_verify !== "false";
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-5">
@@ -16,7 +18,7 @@ export default async function RegisterPage() {
           <p className="mt-1.5 text-sm text-muted">创建账号</p>
         </div>
         {open ? (
-          <RegisterForm />
+          <RegisterForm requireVerify={requireVerify} />
         ) : (
           <div className="space-y-4 text-center">
             <p className="text-sm text-muted">本站暂未开放注册，请联系管理员。</p>

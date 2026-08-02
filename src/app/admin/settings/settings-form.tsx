@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { regenerateApiKey } from "../actions";
+import { regenerateApiKey, sendTestEmailAction } from "../actions";
 
 interface SettingsFormProps {
   fields: {
@@ -50,11 +50,14 @@ export function SettingsForm({ fields, initial, onSubmit, canEdit }: SettingsFor
     v.blocked_ips = ipListToText(initial.blocked_ips);
     v.api_enabled = initial.api_enabled ?? "false";
     v.api_key = initial.api_key ?? "";
+    v.require_email_verify = initial.require_email_verify ?? "true";
+    v.comments_captcha_enabled = initial.comments_captcha_enabled ?? "true";
     return v;
   });
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [pending, setPending] = useState(false);
+  const [testMsg, setTestMsg] = useState("");
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -83,6 +86,27 @@ export function SettingsForm({ fields, initial, onSubmit, canEdit }: SettingsFor
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "重新生成失败");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  // 发送测试邮件：使用当前表单填写的 SMTP 配置（未保存也能测），成功后提示收件地址
+  async function testSmtp() {
+    setError("");
+    setTestMsg("");
+    setPending(true);
+    try {
+      const res = await sendTestEmailAction({
+        host: values.smtp_host ?? "",
+        port: values.smtp_port ?? "",
+        user: values.smtp_user ?? "",
+        pass: values.smtp_pass ?? "",
+        from: values.smtp_from ?? "",
+      });
+      setTestMsg(`✓ 测试邮件已发送至 ${res.to}，请查收（含垃圾箱）`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "发送失败");
     } finally {
       setPending(false);
     }
@@ -146,6 +170,21 @@ export function SettingsForm({ fields, initial, onSubmit, canEdit }: SettingsFor
               disabled={!canEdit}
             />
             <span className="text-sm">新评论需审核后显示</span>
+          </label>
+          <label className="flex cursor-pointer items-center gap-3">
+            <input
+              type="checkbox"
+              className="h-4 w-4 accent-[var(--accent)]"
+              checked={values.comments_captcha_enabled === "true"}
+              onChange={(e) =>
+                setValues((v) => ({
+                  ...v,
+                  comments_captcha_enabled: e.target.checked ? "true" : "false",
+                }))
+              }
+              disabled={!canEdit}
+            />
+            <span className="text-sm">游客评论需输入图形验证码（已登录用户免验证码）</span>
           </label>
           <div>
             <label className="label">每页文章数</label>
@@ -216,9 +255,101 @@ export function SettingsForm({ fields, initial, onSubmit, canEdit }: SettingsFor
             />
             <span className="text-sm">开放注册（关闭后注册页不可用）</span>
           </label>
+          <label className="flex cursor-pointer items-center gap-3">
+            <input
+              type="checkbox"
+              className="h-4 w-4 accent-[var(--accent)]"
+              checked={values.require_email_verify === "true"}
+              onChange={(e) =>
+                setValues((v) => ({
+                  ...v,
+                  require_email_verify: e.target.checked ? "true" : "false",
+                }))
+              }
+              disabled={!canEdit}
+            />
+            <span className="text-sm">注册需邮箱验证码（依赖下方 SMTP 配置）</span>
+          </label>
           <p className="text-xs text-muted">
             开启后访客可在 /register 自助注册，注册即登录；管理员可在“用户管理”中禁用/解禁账号。
           </p>
+        </div>
+      </div>
+
+      <div className="card space-y-4 p-6">
+        <h2 className="text-sm font-medium">邮件服务（SMTP）</h2>
+        <div className="space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="label">SMTP 主机</label>
+              <input
+                className="input"
+                value={values.smtp_host ?? ""}
+                onChange={(e) => setValues((v) => ({ ...v, smtp_host: e.target.value }))}
+                placeholder="smtp.example.com"
+                disabled={!canEdit}
+              />
+            </div>
+            <div>
+              <label className="label">端口</label>
+              <input
+                className="input !w-40"
+                type="number"
+                value={values.smtp_port ?? ""}
+                onChange={(e) => setValues((v) => ({ ...v, smtp_port: e.target.value }))}
+                placeholder="465（SSL）或 587（STARTTLS）"
+                disabled={!canEdit}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="label">账号</label>
+            <input
+              className="input"
+              value={values.smtp_user ?? ""}
+              onChange={(e) => setValues((v) => ({ ...v, smtp_user: e.target.value }))}
+              placeholder="noreply@example.com"
+              disabled={!canEdit}
+            />
+          </div>
+          <div>
+            <label className="label">密码 / 授权码</label>
+            <input
+              className="input"
+              type="password"
+              autoComplete="new-password"
+              value={values.smtp_pass ?? ""}
+              onChange={(e) => setValues((v) => ({ ...v, smtp_pass: e.target.value }))}
+              placeholder="••••••••"
+              disabled={!canEdit}
+            />
+          </div>
+          <div>
+            <label className="label">发件人地址（可选，默认用账号）</label>
+            <input
+              className="input"
+              type="email"
+              value={values.smtp_from ?? ""}
+              onChange={(e) => setValues((v) => ({ ...v, smtp_from: e.target.value }))}
+              placeholder="noreply@example.com"
+              disabled={!canEdit}
+            />
+          </div>
+          <p className="text-xs text-muted">
+            用于发送注册/找回密码验证码、评论回复提醒与站长通知；配置保存在服务器，不会出现在页面源码。
+            端口 465 使用 SSL，其余端口自动尝试 STARTTLS；也可在 .env 配置 SMTP_* 作为兜底。
+          </p>
+          {canEdit && (
+            <button
+              type="button"
+              className="btn btn-outline !text-xs"
+              onClick={testSmtp}
+              disabled={pending}
+            >
+              {pending ? "发送中…" : "发送测试邮件"}
+            </button>
+          )}
+          {testMsg && <p className="text-sm text-accent">{testMsg}</p>}
         </div>
       </div>
 
@@ -238,7 +369,7 @@ export function SettingsForm({ fields, initial, onSubmit, canEdit }: SettingsFor
               }
               disabled={!canEdit}
             />
-            <span className="text-sm">启用邮件通知（需在 .env 配置 SMTP）</span>
+            <span className="text-sm">启用邮件通知（需在上方配置 SMTP）</span>
           </label>
           <div>
             <label className="label">接收通知的邮箱</label>

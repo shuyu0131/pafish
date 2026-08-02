@@ -16,7 +16,7 @@ import {
   canManagePosts,
 } from "@/lib/constants";
 import { slugify } from "@/lib/utils";
-import { getSetting } from "@/lib/settings";
+import { getSetting, getSettings } from "@/lib/settings";
 import { generateApiKey } from "@/lib/api-key";
 import { WIDGET_TYPES, WIDGET_TYPE_LABEL, WidgetType } from "@/lib/widget-constants";
 import {
@@ -30,6 +30,7 @@ import { doAction, postPayload } from "@/lib/hooks";
 import { refreshPluginPages, PAGE_TEMPLATE_KEY } from "@/lib/plugin-pages";
 import { deleteFromCloud } from "@/lib/plugin-storage";
 import { PAGE_TEMPLATE_NAME_RE } from "@/lib/theme";
+import { sendTestMail, type SmtpConfig } from "@/lib/notify";
 
 // ---------- 权限守卫 ----------
 async function guardCanManagePosts() {
@@ -971,6 +972,13 @@ export async function updateSettings(input: Record<string, string>) {
     "api_key",
     "store_url",
     "store_token",
+    "smtp_host",
+    "smtp_port",
+    "smtp_user",
+    "smtp_pass",
+    "smtp_from",
+    "require_email_verify",
+    "comments_captcha_enabled",
   ]);
   const entries = Object.entries(input).filter(([k]) => allowed.has(k));
   await prisma.$transaction(
@@ -985,6 +993,23 @@ export async function updateSettings(input: Record<string, string>) {
   revalidatePath("/");
 
   revalidatePath("/admin/settings");
+}
+
+// 发送测试邮件：使用表单当前填写的 SMTP 配置（未保存也能测），收件人 = 当前账号邮箱或站长通知邮箱
+export async function sendTestEmailAction(cfg: SmtpConfig) {
+  const user = await guardCanManagePosts();
+  if (!cfg.host || !cfg.user || !cfg.pass) {
+    throw new Error("请先填写 SMTP 主机、账号和密码");
+  }
+  const me = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { email: true },
+  });
+  const settings = await getSettings();
+  const to = me?.email || settings.notify_email;
+  if (!to) throw new Error("当前账号未设置邮箱，且站长通知邮箱为空，无法发送");
+  await sendTestMail(to, cfg);
+  return { ok: true, to };
 }
 
 // ---------- 用户 ----------

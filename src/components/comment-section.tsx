@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
+import { getSession } from "@/lib/auth";
+import { getSettings } from "@/lib/settings";
 import { formatDate } from "@/lib/utils";
 import { avatarSrc } from "@/lib/avatar";
 import { CommentForm } from "./comment-form";
@@ -31,6 +33,18 @@ export async function CommentSection({
   page?: number;
 }) {
   const postIdBig = BigInt(postId);
+
+  // 登录用户：评论自动使用登录身份（昵称优先）；未登录游客按评论验证码开关显示图形验证码
+  const [session, settings] = await Promise.all([getSession(), getSettings()]);
+  let user: { username: string; nickname: string | null } | null = null;
+  if (session) {
+    const u = await prisma.user.findUnique({
+      where: { id: BigInt(session.id) },
+      select: { username: true, nickname: true },
+    });
+    user = u;
+  }
+  const captchaEnabled = settings.comments_captcha_enabled !== "false";
 
   // 顶层评论分页（置顶优先，其余按时间正序）
   const [topCount, total, topComments] = await Promise.all([
@@ -105,9 +119,20 @@ export async function CommentSection({
         评论 <span className="text-sm font-normal text-meta">({total})</span>
       </h2>
 
-      <CommentForm postId={postId} needReview={needReview} />
+      <CommentForm
+        postId={postId}
+        needReview={needReview}
+        user={user}
+        captchaEnabled={captchaEnabled}
+      />
 
-      <CommentThread comments={roots} postId={postId} needReview={needReview} />
+      <CommentThread
+        comments={roots}
+        postId={postId}
+        needReview={needReview}
+        user={user}
+        captchaEnabled={captchaEnabled}
+      />
 
       {/* 评论分页（按顶层评论计数） */}
       {totalPages > 1 && (

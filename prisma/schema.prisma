@@ -196,6 +196,20 @@ model Setting {
   @@map("settings")
 }
 
+// 邮箱验证码（注册 / 忘记密码）：6 位数字，10 分钟过期，校验通过后标记 used
+model EmailCode {
+  id        BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  email     String   @db.VarChar(255)
+  purpose   String   @db.VarChar(20) // register / reset
+  code      String   @db.VarChar(10)
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([email, purpose])
+  @@map("email_codes")
+}
+
 // 图片文件库：编辑器/封面上传的图片统一入库管理
 model Upload {
   id           BigInt   @id @default(autoincrement()) @db.UnsignedBigInt

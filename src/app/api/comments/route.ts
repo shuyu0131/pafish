@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
 import { COMMENT_STATUS } from "@/lib/constants";
 import { createNotification, sendCommentEmail, sendReplyEmail } from "@/lib/notify";
+import { getSession } from "@/lib/auth";
+import { verifyCaptcha } from "@/lib/captcha";
 import { doAction } from "@/lib/hooks";
 
 // ---------- 评论反垃圾 ----------
@@ -67,8 +69,39 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => null);
   const postId = String(body?.postId ?? "");
-  const name = String(body?.name ?? "").trim().slice(0, 50);
-  const email = String(body?.email ?? "").trim().slice(0, 255);
+
+  // 登录检测：已登录用户自动使用登录身份（服务端强制，忽略 body 伪造的昵称/邮箱）
+  // 未登录游客必须通过图形验证码（后台可关闭）
+  const session = await getSession();
+
+  let name: string;
+  let email: string;
+  let userId: bigint | null = null;
+  if (session) {
+    const user = await prisma.user.findUnique({
+      where: { id: BigInt(session.id) },
+      select: { id: true, username: true, nickname: true, email: true, disabled: true },
+    });
+    // 会话失效（用户被删/被禁）按游客处理
+    if (!user || user.disabled) {
+      return NextResponse.json({ error: "登录状态已失效，请重新登录" }, { status: 401 });
+    }
+    userId = user.id;
+    name = (user.nickname || user.username).trim().slice(0, 50);
+    email = user.email;
+  } else {
+    // 游客评论验证码：默认开启（未写入设置时按开启处理）
+    if (settings.comments_captcha_enabled !== "false") {
+      const captchaToken = String(body?.captchaToken ?? "");
+      const captchaAnswer = String(body?.captchaAnswer ?? "");
+      if (!verifyCaptcha(captchaToken, captchaAnswer)) {
+        return NextResponse.json({ error: "验证码错误，请重试" }, { status: 400 });
+      }
+    }
+    name = String(body?.name ?? "").trim().slice(0, 50);
+    email = String(body?.email ?? "").trim().slice(0, 255);
+  }
+
   const content = String(body?.content ?? "").trim().slice(0, 2000);
   const parentIdRaw = body?.parentId ? String(body.parentId) : "";
   // 勾选"有新回复邮件通知我"：有人回复这条评论时给评论者发邮件
@@ -127,6 +160,7 @@ export async function POST(req: NextRequest) {
       postId: post.id,
       authorName: name,
       authorEmail: email,
+      userId,
       content,
       status: needReview ? COMMENT_STATUS.PENDING : COMMENT_STATUS.APPROVED,
       parentId,

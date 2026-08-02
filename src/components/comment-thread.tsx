@@ -80,11 +80,15 @@ function CommentItem({
   postId,
   needReview,
   depth,
+  user,
+  captchaEnabled,
 }: {
   node: CommentNode;
   postId: string;
   needReview: boolean;
   depth: number;
+  user?: { username: string; nickname: string | null } | null;
+  captchaEnabled?: boolean;
 }) {
   const [replying, setReplying] = useState(false);
 
@@ -132,13 +136,23 @@ function CommentItem({
           parentId={node.id}
           compact
           onDone={() => setReplying(false)}
+          user={user}
+          captchaEnabled={captchaEnabled}
         />
       )}
 
       {node.replies.length > 0 && (
         <div className="mt-4 space-y-4">
           {node.replies.map((r) => (
-            <CommentItem key={r.id} node={r} postId={postId} needReview={needReview} depth={depth + 1} />
+            <CommentItem
+              key={r.id}
+              node={r}
+              postId={postId}
+              needReview={needReview}
+              depth={depth + 1}
+              user={user}
+              captchaEnabled={captchaEnabled}
+            />
           ))}
         </div>
       )}
@@ -150,10 +164,14 @@ export function CommentThread({
   comments,
   postId,
   needReview,
+  user,
+  captchaEnabled,
 }: {
   comments: CommentNode[];
   postId: string;
   needReview: boolean;
+  user?: { username: string; nickname: string | null } | null;
+  captchaEnabled?: boolean;
 }) {
   return (
     <div className="mt-8 space-y-5">
@@ -163,7 +181,15 @@ export function CommentThread({
         </p>
       )}
       {comments.map((c) => (
-        <CommentItem key={c.id} node={c} postId={postId} needReview={needReview} depth={0} />
+        <CommentItem
+          key={c.id}
+          node={c}
+          postId={postId}
+          needReview={needReview}
+          depth={0}
+          user={user}
+          captchaEnabled={captchaEnabled}
+        />
       ))}
     </div>
   );

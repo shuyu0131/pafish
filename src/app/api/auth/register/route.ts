@@ -3,9 +3,11 @@ import { hash } from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { createSession } from "@/lib/auth";
 import { getSettings } from "@/lib/settings";
+import { verifyEmailCode } from "@/lib/email-code";
 import { doAction } from "@/lib/hooks";
 
 // 开放注册（站点设置 allow_registration 控制）
+// 开启 require_email_verify（默认开启）时，必须携带通过校验的邮箱验证码
 export async function POST(req: NextRequest) {
   const settings = await getSettings();
   if (settings.allow_registration === "false") {
@@ -16,6 +18,7 @@ export async function POST(req: NextRequest) {
   const username = String(body?.username ?? "").trim().slice(0, 50);
   const email = String(body?.email ?? "").trim().slice(0, 255);
   const password = String(body?.password ?? "");
+  const code = String(body?.code ?? "").trim();
 
   if (!/^[\w\u4e00-\u9fa5-]{2,50}$/.test(username)) {
     return NextResponse.json(
@@ -28,6 +31,13 @@ export async function POST(req: NextRequest) {
   }
   if (password.length < 6 || password.length > 72) {
     return NextResponse.json({ error: "密码长度需 6-72 位" }, { status: 400 });
+  }
+
+  // 邮箱验证码：站点开启时必须通过（校验通过后自动标记已使用）；默认开启
+  if (settings.require_email_verify !== "false") {
+    if (!(await verifyEmailCode(email.toLowerCase(), "register", code))) {
+      return NextResponse.json({ error: "验证码错误或已过期" }, { status: 400 });
+    }
   }
 
   const exists = await prisma.user.findFirst({
