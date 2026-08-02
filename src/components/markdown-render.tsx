@@ -33,7 +33,7 @@ export function MarkdownRender({ content }: { content: string }) {
               {...props}
               loading="lazy"
               alt={props.alt ?? ""}
-              onClick={() => props.src && setZoom(props.src)}
+              onClick={() => typeof props.src === "string" && setZoom(props.src)}
             />
           ),
           // 宽表格包一层滚动容器，窄屏不撑破版面

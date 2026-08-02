@@ -36,6 +36,7 @@ export async function GET(req: NextRequest) {
       take: perPage,
       select: {
         id: true,
+        postId: true,
         parentId: true,
         authorName: true,
         content: true,
