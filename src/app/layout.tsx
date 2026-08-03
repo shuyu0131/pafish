@@ -23,6 +23,10 @@ export const metadata: Metadata = {
   },
 };
 
+// 全站动态渲染：构建期（容器内无数据库）不静态探测任何页面，
+// 运行时按请求 SSR（博客数据本就随库变化，缓存策略见各页面）
+export const dynamic = "force-dynamic";
+
 // 主题 CSS 变量覆盖注入在前台布局（(public)/layout.tsx）——主题只作用于前台，
 // 后台（/admin、/login 等）始终使用默认配色，不受主题影响
 export default function RootLayout({

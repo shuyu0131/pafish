@@ -52,3 +52,7 @@ next-env.d.ts
 # 会话临时文件
 /.tmp-*.png
 /.tmp-*.shot
+
+# Dockerfile 构建产物（seed/索引脚本 esbuild 单文件，镜像内使用）
+/seed.cjs
+/fix-ft-index.cjs

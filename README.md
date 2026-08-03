@@ -23,7 +23,27 @@
 
 ## 快速开始
 
-### 方式一：一键安装（推荐，v1.0.0 起）
+三种部署方式任选其一（互不冲突，可并存）：
+
+| 方式 | 形态 | 适合 |
+|------|------|------|
+| **① 完全容器化**（[详细教程](docs/docker-deploy.md)） | MySQL + 应用都在 Docker，`docker compose up -d` 一条命令 | 交付部署 / 多机部署 / 不想装 Node.js |
+| ② 一键安装（混合模式） | MySQL 用 Docker，应用跑宿主 Node（PM2） | 单台服务器自托管，开发调试更直接 |
+| ③ 手动部署 / 宝塔 | 全手动命令 | 需要完全掌控每一步 |
+
+### 方式一：完全容器化（推荐，一条命令起全部）
+
+要求：已安装 **Docker 20.10+**（Windows 需 Docker Desktop 运行中）。
+
+```bash
+git clone https://github.com/shuyu0131/pafish.git && cd pafish
+cp .env.example .env        # 修改 AUTH_SECRET（保持随机值）与 SITE_URL（正式域名）
+docker compose up -d --build
+```
+
+首次启动自动完成：建表（`migrate deploy`）→ 补建搜索索引 → 种子数据（admin/Admin@12345）→ 启动。媒体/主题/插件/备份均存命名卷，重启不丢。完整教程（备份恢复、升级、常见问题）见 **[docs/docker-deploy.md](docs/docker-deploy.md)**。
+
+### 方式二：一键安装（混合模式，v1.0.0 起）
 
 要求：已安装 **Node.js 18+** 与 **Docker**（Windows 需 Docker Desktop 运行中）。
 
@@ -46,12 +66,12 @@ npm start          # 生产运行（需先 npm run build）
 
 访问 http://localhost:3000 ，后台 http://localhost:3000/admin
 
-### 方式二：手动部署
+### 方式三：手动部署
 
 **1. 启动 MySQL（Docker）**——仓库已提供 `docker-compose.yml`（推荐，含数据卷持久化）：
 
 ```bash
-docker compose up -d
+docker compose up -d mysql
 ```
 
 等价的手动 `docker run`（无数据卷，容器删除即丢数据，不建议生产使用）：
@@ -92,6 +112,8 @@ npx prisma db seed            # 种子数据（管理员/示例文章/默认设�
 npm run build
 npm start          # 生产模式；常驻部署见下方「PM2 常驻」
 ```
+
+> **服务器用宝塔面板？** 见 [docs/bt-panel.md](docs/bt-panel.md) —— 使用宝塔自带 MySQL（无需 Docker）+ Node.js 项目管理器 + Nginx 反向代理，含数据库权限、SSL、备份与常见问题。
 
 **默认账号**（请尽快修改）：
 

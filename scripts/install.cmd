@@ -28,7 +28,7 @@ if %errorlevel%==0 (
   rem 旧版 docker run 创建的容器无数据卷；如需持久化请按 README「升级已有容器到持久化」迁移
 ) else (
   echo   未发现 pafish-mysql，通过 docker compose 创建（数据持久化到命名卷）
-  docker compose up -d
+  docker compose up -d mysql
   if errorlevel 1 (echo [错误] docker compose 启动失败，请确认 Docker Desktop 已运行 & exit /b 1)
 )
 

@@ -1,5 +1,24 @@
 # 更新日志
 
+## [1.1.0] - 2026-08-02
+
+完全容器化部署（Docker 一键）。
+
+### 新增
+
+- **Dockerfile**：多阶段构建（node:22-alpine）——依赖层 → 构建层（`prisma generate` + `next build` standalone + esbuild 打包种子/索引脚本）→ 运行层（Next standalone + Prisma CLI + mariadb-client 备份工具 + sharp 依赖链）
+- **docker-compose.yml 双服务编排**：`mysql`（健康检查、数据卷）+ `app`（依赖 MySQL 健康后才启动）；5 个命名卷持久化（`pafish-mysql-data` / `pafish-uploads` / `pafish-themes` / `pafish-plugins` / `pafish-backups`）；`MYSQL_PORT`/`APP_PORT`/`NPM_REGISTRY` 环境变量可覆盖；容器内自动指向 compose 网络数据库
+- **docker-entrypoint.sh 一键初始化**：首启空卷恢复内置主题/插件 → `prisma migrate deploy` → 补建 FULLTEXT 索引 → 种子数据（幂等）→ 启动服务；重启幂等安全
+- **docs/docker-deploy.md 部署教程**：安装步骤、首次启动说明、常用命令、备份/恢复、升级、端口冲突与国内网络常见问题
+- `next.config.ts` 启用 `output: "standalone"`（Docker 镜像使用）
+- **构建期无需数据库**：全站动态渲染（构建时零数据库连接），镜像内 prisma CLI 依赖闭包完整（`migrate deploy`/种子/索引脚本直接可用）
+
+### 说明
+
+- 安装门槛进一步降低：服务器/交付场景不再需要 Node.js，`docker compose up -d --build` 一条命令起全部
+- 三种部署方式并存：完全容器化（推荐）/ 混合模式一键脚本 / 手动部署，互不冲突
+- 完全容器化经隔离环境全链路验证：首启初始化 → 页面/登录 → 全文索引 → 卷持久化 → 备份工具 → 重启/宿主机重启自动恢复
+
 ## [1.0.0] - 2026-08-02
 
 首个正式版。核心系统 + 主题/插件生态 + 一键安装部署，可从零独立运行。

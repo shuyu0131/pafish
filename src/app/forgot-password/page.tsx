@@ -2,6 +2,8 @@ import { getSettings } from "@/lib/settings";
 import { ForgotForm } from "./forgot-form";
 
 export const metadata = { title: "找回密码" };
+// 页面依赖站点设置（getSettings 查库），动态渲染避免构建期（容器内无 DB）静态导出失败
+export const dynamic = "force-dynamic";
 
 export default async function ForgotPasswordPage() {
   const settings = await getSettings();
