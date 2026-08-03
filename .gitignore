@@ -30,8 +30,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files（.env 为本地私密配置，不入库；.env.example 是模板，必须入库供 cp 使用）
 .env*
+!.env.example
 
 # vercel
 .vercel
